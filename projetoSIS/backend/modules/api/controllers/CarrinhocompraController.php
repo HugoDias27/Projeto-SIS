@@ -6,9 +6,10 @@ use backend\modules\api\components\CustomAuth;
 use Yii;
 use yii\rest\ActiveController;
 
-class ReceitamedicaController extends ActiveController
+class CarrinhocompraController extends ActiveController
 {
-    public $modelClass = 'common\models\ReceitaMedica';
+
+    public $modelClass = 'common\models\CarrinhoCompra';
 
     public function behaviors()
     {
@@ -25,14 +26,15 @@ class ReceitamedicaController extends ActiveController
         return $this->render('index');
     }
 
-    public function actionMinhareceita($clienteid)
-    {
-        $receitaModel = new $this->modelClass;
-        $receitas = $receitaModel::find()->where(['user_id' => $clienteid])->all();
 
-        if($receitas)
+    public function actionCarrinhocompra($id)
+    {
+        $carrinhoModel = new $this->modelClass;
+        $carrinho = $carrinhoModel::find()->where(['cliente_id' => $id])->orderBy(['dta_venda' => SORT_DESC])->one();
+
+        if($carrinho)
         {
-            return $receitas;
+            return $carrinho;
         }
         else
         {
@@ -40,19 +42,19 @@ class ReceitamedicaController extends ActiveController
         }
     }
 
-    public function actionReceitasvalidas()
+    public function actionCarrinhos($id)
     {
-        $receitaModel = new $this->modelClass;
-        $data = date('Y-m-d');
-        $receitas = $receitaModel::find()->where(['data_validade' => $data])->all();
+        $carrinhoModel = new $this->modelClass;
+        $carrinho = $carrinhoModel::find()->where(['cliente_id' => $id])->all();
 
-        if ($receitas)
+        if($carrinho)
         {
-            return $receitas;
+            return $carrinho;
         }
         else
         {
             throw new \yii\web\NotFoundHttpException('Dados não encontrados.');
         }
     }
+
 }

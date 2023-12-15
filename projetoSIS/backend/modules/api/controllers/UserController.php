@@ -10,6 +10,12 @@ class UserController extends ActiveController
 {
 
     public $modelClass = 'common\models\User';
+    public $modelFaturaClass = 'common\models\Fatura';
+    public $modelLinhaFaturaClass = 'common\models\LinhaFatura';
+    public $modelLinhaCarrinhoClass = 'common\models\LinhaCarrinho';
+    public $modelCarrinhoClass = 'common\models\CarrinhoCompra';
+    public $modelProdutoClass = 'common\models\Produto';
+    public $modelServicoClass = 'common\models\Servico';
 
     public function behaviors()
     {
@@ -65,4 +71,69 @@ class UserController extends ActiveController
         }
     }
 
+    public function actionEstatisticas($id)
+    {
+        $userModel = new $this->modelClass;
+        $perfilCliente = $userModel::findOne($id);
+
+        $faturaModel = new $this->modelFaturaClass;
+        $linhaFaturaModel = new $this->modelLinhaFaturaClass;
+        $servicoModel = new $this->modelServicoClass;
+        $carrinhoModel = new $this->modelCarrinhoClass;
+        $linhaCarrinhoModel = new $this->modelLinhaCarrinhoClass;
+        $produtoModel = new $this->modelProdutoClass;
+
+        if ($perfilCliente) {
+            $faturasCliente = $faturaModel::find()->where(['cliente_id' => $id])->all();
+
+            $totalPrecoFaturas = 0;
+            $produtosCliente = [];
+            $servicosCliente = [];
+
+            foreach ($faturasCliente as $fatura) {
+                $totalPrecoFaturas += $fatura->valortotal;
+
+                $carrinho = $carrinhoModel::findOne(['fatura_id' => $fatura->id]);
+
+                if ($carrinho) {
+                    $linhasCarrinho = $linhaCarrinhoModel::find()->where(['carrinho_compra_id' => $carrinho->id])->all();
+
+                    foreach ($linhasCarrinho as $linhaCarrinho) {
+                        $produto = $produtoModel::findOne($linhaCarrinho->produto_id);
+
+                        if ($produto) {
+                            $produtosCliente[] = ['nome' => $produto->nome, 'preco unitário' => $produto->preco];
+                        }
+                    }
+                }
+
+                $linhasFatura = $linhaFaturaModel::find()->where(['fatura_id' => $fatura->id])->all();
+
+                foreach ($linhasFatura as $linhaFatura) {
+                    $servico = $servicoModel::findOne(['id' => $linhaFatura->servico_id]);
+
+                    if ($servico) {
+                        $servicosCliente[] = ['nome' => $servico->nome, 'preco' => $servico->preco];
+                    }
+                }
+            }
+
+            return ['produtos' => $produtosCliente, 'totalPrecoFaturas' => $totalPrecoFaturas, 'servicos' => $servicosCliente];
+        }
+
+        throw new \yii\web\NotFoundHttpException('Dados não encontrado.');
+    }
+
+    public function actionContarcompras($id)
+    {
+        $faturaModel = new $this->modelFaturaClass;
+
+        $numeroFaturas = $faturaModel::find()->where(['cliente_id' => $id])->count();
+
+        if($numeroFaturas) {
+
+            return $numeroFaturas;
+        }
+        throw new \yii\web\NotFoundHttpException('Não foram realizadas compras.');
+    }
 }

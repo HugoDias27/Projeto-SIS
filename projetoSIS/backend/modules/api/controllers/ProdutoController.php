@@ -12,12 +12,15 @@ use yii\rest\ActiveController;
 class ProdutoController extends ActiveController
 {
     public $modelClass = 'common\models\Produto';
-    public $modelCategoria = 'common\models\Categoria';
-    public $modelFornecedorProduto = 'common\models\FornecedorProduto';
+    public $modelCategoriaClass = 'common\models\Categoria';
+    public $modelFornecedorProdutoClass = 'common\models\FornecedorProduto';
+    public $modelIvaClass = 'common\models\Iva';
+
 
     public function behaviors()
     {
         Yii::$app->params['id'] = 0;
+        Yii::$app->params['auth_key'] = 0;
         $behaviors = parent::behaviors();
         $behaviors['authenticator'] = [
             'class' => CustomAuth::className(),
@@ -25,9 +28,38 @@ class ProdutoController extends ActiveController
         return $behaviors;
     }
 
+
     public function actionIndex()
     {
         return $this->render('index');
+    }
+
+    public function actionMedicamentos()
+    {
+        $produtoModel = new $this->modelClass;
+        $produtos = $produtoModel::find()->select(['produtos.id', 'produtos.nome', 'produtos.prescricao_medica', 'produtos.preco', 'produtos.quantidade',
+            'categorias.descricao AS categoria',
+                'ivas.percentagem AS iva'
+            ])
+            ->join('LEFT JOIN', 'categorias', 'categorias.id = produtos.categoria_id')
+            ->join('LEFT JOIN', 'ivas', 'ivas.id = produtos.iva_id')
+            ->asArray()
+            ->all();
+
+        $formattedProdutos = [];
+        foreach ($produtos as $produto) {
+            $formattedProdutos[] = [
+                'id' => $produto['id'],
+                'nome' => $produto['nome'],
+                'prescricao_medica' => $produto['prescricao_medica'],
+                'preco' => $produto['preco'],
+                'quantidade' => $produto['quantidade'],
+                'categoria' => $produto['categoria'],
+                'iva' => $produto['iva'],
+            ];
+        }
+
+        return $formattedProdutos;
     }
 
     public function actionImagens()
@@ -52,7 +84,7 @@ class ProdutoController extends ActiveController
     public function actionProdutoporcategoria($nomecategoria)
     {
         $produtoModel = new $this->modelClass;
-        $categoriaModel = new $this->modelCategoria;
+        $categoriaModel = new $this->modelCategoriaClass;
 
         $categoriaMedicamentos = $categoriaModel::findOne(['descricao' => $nomecategoria]);
 
@@ -67,7 +99,7 @@ class ProdutoController extends ActiveController
 
     public function actionFornecedorproduto($nomeproduto)
     {
-        $fornecedorProdutoModel = new $this->modelFornecedorProduto;
+        $fornecedorProdutoModel = new $this->modelFornecedorProdutoClass;
         $produtoModel = new $this->modelClass;
 
         $produto = $produtoModel::findOne(['nome' => $nomeproduto]);
@@ -82,7 +114,7 @@ class ProdutoController extends ActiveController
             return $fornecedores;
         }
 
-        throw new \yii\web\NotFoundHttpException('Produto não encontrado.');
+        throw new \yii\web\NotFoundHttpException('Produto(s) não encontrado.');
     }
 
     public function actionProdutoreceita($valor)
@@ -96,7 +128,11 @@ class ProdutoController extends ActiveController
             $produtosReceita = $produtoModel::find()->where(['prescricao_medica' => 1])->all();
         }
 
-        return $produtosReceita;
+        if($produtosReceita) {
 
+            return $produtosReceita;
+        }
+
+        throw new \yii\web\NotFoundHttpException('Produto(s) não encontrado.');
     }
 }
