@@ -37,21 +37,28 @@ class ProdutoController extends ActiveController
     public function actionMedicamentos()
     {
         $produtoModel = new $this->modelClass;
-        $produtos = $produtoModel::find()->select(['produtos.id', 'produtos.nome', 'produtos.prescricao_medica', 'produtos.preco', 'produtos.quantidade',
+        $produtos = $produtoModel::find()->select([
+            'produtos.id',
+            'produtos.nome',
+            'produtos.prescricao_medica',
+            'produtos.preco',
+            'produtos.quantidade',
             'categorias.descricao AS categoria',
-                'ivas.percentagem AS iva'
-            ])
+            'ivas.percentagem AS iva'
+        ])
             ->join('LEFT JOIN', 'categorias', 'categorias.id = produtos.categoria_id')
             ->join('LEFT JOIN', 'ivas', 'ivas.id = produtos.iva_id')
             ->asArray()
             ->all();
 
-        $formattedProdutos = [];
+        $Produtos = [];
         foreach ($produtos as $produto) {
-            $formattedProdutos[] = [
+            $prescricaoMedica = $produto['prescricao_medica'] == 1 ? 'Sim' : 'Não';
+
+            $Produtos[] = [
                 'id' => $produto['id'],
                 'nome' => $produto['nome'],
-                'prescricao_medica' => $produto['prescricao_medica'],
+                'prescricao_medica' => $prescricaoMedica,
                 'preco' => $produto['preco'],
                 'quantidade' => $produto['quantidade'],
                 'categoria' => $produto['categoria'],
@@ -59,8 +66,9 @@ class ProdutoController extends ActiveController
             ];
         }
 
-        return $formattedProdutos;
+        return $Produtos;
     }
+
 
     public function actionImagens()
     {

@@ -80,6 +80,7 @@ return [
                         'GET funcionarios' => 'funcionarios',
                         'GET estatisticas/{id}' => 'estatisticas',
                         'GET estatisticas/contarcompras/{id}' => 'contarcompras',
+                        'POST criarusers' => 'criarusers',
                     ],
                     'tokens' => [
                         '{id}' => '<id:\\d+>',

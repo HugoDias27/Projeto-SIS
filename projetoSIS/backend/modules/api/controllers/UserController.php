@@ -19,11 +19,17 @@ class UserController extends ActiveController
 
     public function behaviors()
     {
-        Yii::$app->params['id'] = 0;
+        $behaviors = parent::behaviors();
         $behaviors = parent::behaviors();
         $behaviors['authenticator'] = [
             'class' => CustomAuth::className(),
         ];
+
+        // Desabilitar o autenticador para a ação de criar usuários
+        if (Yii::$app->controller->action->id === 'criarusers') {
+            unset($behaviors['authenticator']);
+        }
+
         return $behaviors;
     }
 
@@ -31,6 +37,31 @@ class UserController extends ActiveController
     {
         return $this->render('index');
     }
+
+    public function actionCriarusers()
+    {
+        $userModel = new $this->modelClass;
+        $request = Yii::$app->request;
+
+        $username = $request->getBodyParam('username');
+        $password = $request->getBodyParam('password');
+        $email = $request->getBodyParam('email');
+
+
+        $userModel->username = $username;
+        $userModel->setPassword($password);
+        $userModel->generateAuthKey();
+        $userModel->email = $email;
+        $userModel->status = 10;
+
+
+        if ($userModel->save()) {
+            return ['resposta' => true];
+        } else {
+            return ['resposta' => false];
+        }
+    }
+
 
     public function actionClientes()
     {

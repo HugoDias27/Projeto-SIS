@@ -30,28 +30,31 @@ class ReceitamedicaController extends ActiveController
         $receitaModel = new $this->modelClass;
         $receitas = $receitaModel::find()->where(['user_id' => $clienteid])->all();
 
-        if($receitas)
-        {
+        $dataAtual = date('Y-m-d');
+
+        foreach ($receitas as $receita) {
+            if ($receita->data_validade <= $dataAtual) {
+                $receita->valido = 'Não';
+            } else
+                $receita->valido = 'Sim';
+        }
+        if ($receitas)
             return $receitas;
-        }
         else
-        {
             throw new \yii\web\NotFoundHttpException('Dados não encontrados.');
-        }
+
     }
 
-    public function actionReceitasvalidas()
+    public
+    function actionReceitasvalidas()
     {
         $receitaModel = new $this->modelClass;
         $data = date('Y-m-d');
         $receitas = $receitaModel::find()->where(['data_validade' => $data])->all();
 
-        if ($receitas)
-        {
+        if ($receitas) {
             return $receitas;
-        }
-        else
-        {
+        } else {
             throw new \yii\web\NotFoundHttpException('Dados não encontrados.');
         }
     }

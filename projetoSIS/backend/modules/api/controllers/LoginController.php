@@ -27,6 +27,7 @@ class LoginController extends ActiveController
        }
 
         $user = $userModel::find()->where(['username' => $username])->one();
+        $id = $user->id;
 
         if (!$user || !$user->validatePassword($password)) {
             throw new ForbiddenHttpException('Nome de usuário ou senha incorretos');
@@ -38,6 +39,6 @@ class LoginController extends ActiveController
             throw new \yii\web\ServerErrorHttpException('Erro ao recuperar a chave de autenticação');
         }
 
-        return ['auth_key' => $auth_key];
+        return ['id' => $id, 'auth_key' => $auth_key];
     }
 }
