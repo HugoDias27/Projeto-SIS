@@ -54,6 +54,7 @@ class ReceitamedicaController extends ActiveController
             foreach ($receitas as $receita) {
                 if ($receita->data_validade <= $dataAtual || $receita->valido == 0) {
                     $receita->valido = 'Não';
+                    $receita->save($receita->valido = 0);
                 } else {
                     $receita->valido = 'Sim';
                 }
@@ -71,7 +72,7 @@ class ReceitamedicaController extends ActiveController
             if ($receitas) {
                 return $receitas;
             } else {
-                throw new \yii\web\NotFoundHttpException('Dados não encontrados.');
+                return [];
             }
         } else {
             throw new \yii\web\ForbiddenHttpException('Proibido');
